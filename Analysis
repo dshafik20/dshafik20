@@ -1,0 +1,179 @@
+import os
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import re
+import requests
+
+
+data_stopwords = requests.get(
+  "https://gist.githubusercontent.com/larsyencken/1440509/raw/53273c6c202b35ef00194d06751d8ef630e53df2/stopwords.txt"
+).text
+ # Define function to remove stopwords
+ 
+def remove_stopwords(input_string):
+  dict_stopwords = {}
+  for val in data_stopwords.split("\n"):
+    dict_stopwords[val.strip()] = 1
+ 
+  output_string = ""
+  for word in input_string.lower().split():
+    if (word in dict_stopwords):
+      continue
+    output_string += word + " "
+  output_string = output_string.strip()
+  return output_string
+
+# Open and read titles_1918.txt
+with open("titles_1918.txt", "r") as f:
+    titles_1918 = f.read()
+
+# Remove stopwords
+titles_1918 = remove_stopwords(titles_1918)
+
+# Split the text into words
+words_1918 = titles_1918.split()
+
+# Count the frequency of each word
+word_freq_1918 = {}
+for word in words_1918:
+    if word in word_freq_1918:
+        word_freq_1918[word] += 1
+    else:
+        word_freq_1918[word] = 1
+
+# Sort the words by frequency in descending order
+sorted_word_freq_1918 = sorted(word_freq_1918.items(), key=lambda x: x[1], reverse=True)
+
+# Print the 10 most frequent words in reverse order of frequency
+print("The 10 most frequent words in headlines from 1918 are:")
+for i in range(9, -1, -1):
+    print("{}: {}".format(sorted_word_freq_1918[i][0], sorted_word_freq_1918[i][1]))
+
+
+# Open and read titles_2020.txt
+with open("titles_2020.txt", "r") as f:
+    titles_2020 = f.read()
+
+# Remove stopwords
+titles_2020 = remove_stopwords(titles_2020)
+
+# Split the text into words
+words_2020 = titles_2020.split()
+
+# Count the frequency of each word
+word_freq_2020 = {}
+for word in words_2020:
+    if word in word_freq_2020:
+        word_freq_2020[word] += 1
+    else:
+        word_freq_2020[word] = 1
+
+# Sort the words by frequency in descending order
+sorted_word_freq_2020 = sorted(word_freq_2020.items(), key=lambda x: x[1], reverse=True)
+
+# Print the 10 most frequent words in reverse order of frequency
+print("The 10 most frequent words in headlines from 2020 are:")
+for i in range(9, -1, -1):
+    print("{}: {}".format(sorted_word_freq_2020[i][0], sorted_word_freq_2020[i][1]))
+
+# Define the keywords to search for
+keywords = ['flu', 'virus', 'death']
+
+# Loop over the two files and count the occurrences of each word
+counts_1918 = {word: 0 for word in keywords}
+counts_2020 = {word: 0 for word in keywords}
+
+with open('titles_1918.txt', 'r') as f:
+    for line in f:
+        for word in keywords:
+            if word in line.lower():
+                counts_1918[word] += 1
+
+with open('titles_2020.txt', 'r') as f:
+    for line in f:
+        for word in keywords:
+            if word in line.lower():
+                counts_2020[word] += 1
+
+# Calculate the total number of articles in each file
+num_articles_1918 = sum(1 for line in open('titles_1918.txt', 'r'))
+num_articles_2020 = sum(1 for line in open('titles_2020.txt', 'r'))
+
+# Calculate the fractions for each keyword and file
+fractions_1918 = {word: count/num_articles_1918 for word, count in counts_1918.items()}
+fractions_2020 = {word: count/num_articles_2020 for word, count in counts_2020.items()}
+
+# Printing fractions of articles containing keywords in titles_1918.txt
+print('\nFractions of headlines containing these keywords in 1918 are:')
+for word, fraction in fractions_1918.items():
+    print(word + ': {:.3f}'.format(fraction))
+    
+# Printing fractions of articles containing keywords in titles_2020.txt
+print('\nThe fractions of headlines containing keywords in 2020 are:')
+for word, fraction in fractions_2020.items():
+    print(word + ': {:.3f}'.format(fraction))
+
+# Open the file containing headlines from 1918
+with open('titles_1918.txt', 'r') as file:
+    # Initialize the total amount of money in headlines to 0
+    total_money_1918 = 0
+    # Loop through each line in the file
+    for line in file:
+        # Use a regular expression to find all occurrences of dollar amounts in the line
+        matches = re.findall(r'\$[0-9,]+', line)
+        # Loop through each match
+        for match in matches:
+            # Remove commas from the match string and convert it to a float
+            money = float(match.replace(',', '')[1:])
+            # Add the money value to the total
+            total_money_1918 += money
+          
+# Adding commas to 1918 money
+money_str_1918 = "{:,}".format(total_money_1918)
+# Print the total amount of money found in headlines from 1918
+print("\nTotal amount of money in headlines from 1918: $" + money_str_1918)
+
+# Open the file containing headlines from 2020
+with open('titles_2020.txt', 'r') as file:
+    #Initialize the total amount of money in headlines to 0
+    total_money_2020 = 0
+    # Loop through each line in the file
+    for line in file:
+        # Use a regular expression to find all occurrences of dollar amounts in the line
+        matches = re.findall(r'\$[0-9,]+', line)
+        # Loop through each match
+        for match in matches:
+            # Remove commas from the match string and convert it to a float
+            money = float(match.replace(',', '')[1:])
+            # Add the money value to the total
+            total_money_2020 += money
+
+# Adding commas to money from 2020
+total_money_str_2020 = "{:,}".format(total_money_2020)
+
+# Print the total amount of money found in headlines from 2020
+print("Total amount of money in headlines from 2020: $" + total_money_str_2020)
+
+
+analyzer = SentimentIntensityAnalyzer()
+
+# calculate average sentiment for titles_1918.txt
+with open('titles_1918.txt', 'r') as file:
+    sentiments_1918 = []
+    for line in file:
+        sentiment = analyzer.polarity_scores(line.strip())['compound']
+        sentiments_1918.append(sentiment)
+    avg_sentiment_1918 = sum(sentiments_1918) / len(sentiments_1918)
+    print("\nThe average sentiment of titles_1918.txt is: {:.3f}".format(avg_sentiment_1918))
+
+# calculate average sentiment for titles_2020.txt
+with open('titles_2020.txt', 'r') as file:
+    sentiments_2020 = []
+    for line in file:
+        sentiment = analyzer.polarity_scores(line.strip())['compound']
+        sentiments_2020.append(sentiment)
+    avg_sentiment_2020 = sum(sentiments_2020) / len(sentiments_2020)
+    print("The average sentiment of titles_2020.txt is: {:.3f}".format(avg_sentiment_2020))
+
+
+
+
